@@ -32,6 +32,15 @@ type context struct {
 	params map[string]string
 }
 
+// 应用到当前的 context
+func (c *context) ApplyContext(cap *capybara, params map[string]string, w http.ResponseWriter, r *http.Request) {
+	c.capa = cap
+	c.w = w
+	c.r = r
+	c.data = make(map[string]interface{})
+	c.params = params
+}
+
 func (c *context) JSON(code int, data interface{}) error {
 	jsonEncoder := json.NewEncoder(c.w)
 	err := jsonEncoder.Encode(data)
@@ -67,7 +76,6 @@ func (c *context) HTML(code int, html string) error {
 }
 
 func (c *context) Param(name string) string {
-	// TODO  解决这个参数索引
 	// 需求：http://localhost:8080/user/123/post/456
 	//                           /user/:id/post/:post_id
 	// id ： 123

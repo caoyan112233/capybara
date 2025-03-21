@@ -37,11 +37,7 @@ func (c *capybara) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if handler != nil && len(params) != 0 && method != "" {
 		// 从池中取出一个context对象
 		currContext := c.pool.Get().(*context)
-		currContext.capa = c
-		currContext.w = w
-		currContext.r = r
-		currContext.data = make(map[string]interface{})
-		currContext.params = params
+		currContext.ApplyContext(c, params, w, r)
 		if method != r.Method {
 			sendError(w, "Error method")
 			return

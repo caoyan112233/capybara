@@ -12,6 +12,7 @@ type node struct {
 	method    string
 }
 
+// 插入路径
 func (n *node) insertRoute(path string, method string, handler HandlerFunc) {
 	// 例子： /user/:id/post/:post_id
 	// 先判断 user结点是否存在，如果不存在则创建一个user结点
@@ -32,6 +33,7 @@ func (n *node) insertRoute(path string, method string, handler HandlerFunc) {
 	currNode.method = method
 }
 
+// 找结点路径
 func (n *node) FindRoute(path string) (HandlerFunc, map[string]string, string) {
 	segments := splitPath(path)
 	currNode := n
@@ -54,6 +56,7 @@ func (n *node) FindRoute(path string) (HandlerFunc, map[string]string, string) {
 	return currNode.handler, params, currNode.method
 }
 
+// 初始化单个结点
 func InitNode() *node {
 	return &node{
 		path:      "",
