@@ -2,6 +2,7 @@ package capybara
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"io"
 	"net/http"
@@ -9,23 +10,65 @@ import (
 
 // **** context
 type Context interface {
-	JSON(data interface{})
+	JSON(code int, data interface{}) error
+	XML(code int, data interface{}) error
+	String(code int, s string) error
+	HTML(code int, html string) error
+
 	Request() *http.Request
 	GetHeader(key string) string
 	Set(key string, value interface{})
 	Get(key string) interface{}
 	Bind(data interface{}) (err error)
+
+	Param(name string) string
 }
 
 type context struct {
 	w    http.ResponseWriter
 	r    *http.Request
 	data map[string]interface{}
+	capa *capybara
+	// params map[string]string
 }
 
-func (c *context) JSON(data interface{}) {
+func (c *context) JSON(code int, data interface{}) error {
 	jsonEncoder := json.NewEncoder(c.w)
-	jsonEncoder.Encode(data)
+	err := jsonEncoder.Encode(data)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "解析json出错")
+	}
+	return nil
+}
+
+func (c *context) String(code int, s string) error {
+	c.w.Header().Set("Content-Type", "text/plain")
+	c.w.WriteHeader(code)
+	_, err := c.w.Write([]byte(s))
+	return err
+}
+
+func (c *context) XML(code int, data interface{}) error {
+	c.w.Header().Set("Content-Type", "application/xml")
+	c.w.WriteHeader(code)
+	xmlEncoder := xml.NewEncoder(c.w)
+	err := xmlEncoder.Encode(data)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "解析xml出错")
+	}
+	return nil
+}
+
+func (c *context) HTML(code int, html string) error {
+	c.w.Header().Set("Content-Type", "text/html")
+	c.w.WriteHeader(code)
+	_, err := c.w.Write([]byte(html))
+	return err
+}
+
+func (c *context) Param(name string) string {
+	// TODO  解决这个参数索引
+	return c.capa.router.tree.paramKey
 }
 
 func (c *context) Request() *http.Request {
@@ -33,7 +76,6 @@ func (c *context) Request() *http.Request {
 }
 
 func (c *context) GetHeader(key string) string {
-
 	return c.r.Header.Get(key)
 }
 

@@ -3,6 +3,7 @@ package capybara
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 )
 
 type HandlerFunc func(Context)
@@ -12,17 +13,18 @@ type Middlewares func(HandlerFunc) HandlerFunc
 
 type capybara struct {
 	router *Router
+	pool   sync.Pool
 }
 
 func New() *capybara {
 	c := &capybara{
-		router: &Router{
-			tree: &node{
-				children:  make(map[string]*node),
-				wildChild: new(node),
-				isWild:    false,
-				handler:   make(map[string]HandlerFunc),
-			}}}
+		router: NewRouter(),
+		pool: sync.Pool{
+			New: func() interface{} {
+				// 当池中无可用对象时，自动调用此函数创建新对象
+				return new(context) // 可以是结构体、切片等任意类型
+			}},
+	}
 	return c
 }
 
@@ -33,13 +35,16 @@ func (c *capybara) Run(addr string) {
 func (c *capybara) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	currentNode := c.router.tree.matchRoute(r.URL.Path)
 	if currentNode != nil {
-		currContext := &context{
-			w:    w,
-			r:    r,
-			data: make(map[string]interface{}),
-		}
+		// 从h池中取出一个context对象
+		currContext := c.pool.Get().(*context)
+		currContext.capa = c
+		currContext.w = w
+		currContext.r = r
+		currContext.data = make(map[string]interface{})
+
 		if currentNode.handler[r.Method] != nil {
 			currentNode.handler[r.Method](currContext)
+			c.pool.Put(currContext)
 		} else {
 			sendError(w, "Error method")
 		}

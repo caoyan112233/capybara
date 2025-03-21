@@ -16,17 +16,45 @@ var DB *gorm.DB
 
 func main() {
 	// 初始化数据库
-	InitDatabase()
+	//	InitDatabase()
 	cap := capybara.New()
-	// 路由组
-	authGroup := cap.Group("/auth")
-	authGroup.POST("/login", Login, Logging)
-	authGroup.POST("/register", Register, Logging)
 
-	profileGroup := cap.Group("/profile")
-	profileGroup.Use(JWTAuth2("capybara"))
-	profileGroup.POST("/viewUser", ViewUserInformation)
+	cap.GET("/user/:id/post/:post_id", func(c capybara.Context) {
+		id := c.Param("id") // 获取路径参数 "id"
+		fmt.Println(id)
+	})
+
+	// 路由组
+	// authGroup := cap.Group("/auth")
+	// authGroup.POST("/login", Login, Logging)
+	// authGroup.POST("/register", Register, Logging)
+
+	// profileGroup := cap.Group("/profile")
+	// profileGroup.Use(JWTAuth2("capybara"))
+	// profileGroup.POST("/viewUser", ViewUserInformation, Logging)
+
+	// cap.GET("/html", HtmlTest)
 	cap.Run(":8080")
+}
+func HtmlTest(ctx capybara.Context) {
+	html := `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Complex HTML</title>
+</head>
+<body>
+    <h1>Welcome to My Website</h1>
+    <p>This is a complex HTML page.</p>
+    <ul>
+        <li>Item 1</li>
+        <li>Item 2</li>
+        <li>Item 3</li>
+    </ul>
+</body>
+</html>
+`
+	ctx.HTML(200, html)
 }
 
 func InitDatabase() {
@@ -58,9 +86,8 @@ func TestDBCreat() {
 func Login(ctx capybara.Context) {
 	currentUser := User{}
 	if err := ctx.Bind(&currentUser); err != nil {
-		ctx.JSON(map[string]string{"message": err.Error()})
+		ctx.JSON(500, map[string]string{"message": err.Error()})
 	}
-
 	fmt.Println(currentUser.Name, currentUser.Password)
 	// 存储从数据库中查询的结果
 	saveCurrentUser := User{}
@@ -77,16 +104,16 @@ func Login(ctx capybara.Context) {
 			// 表示登陆成功，然后向客户端传输JWT Token
 			token, err := generateToken(saveCurrentUser)
 			if err != nil {
-				ctx.JSON(map[string]string{"message": fmt.Sprintf("生成 Token 失败：%v", err)})
+				ctx.JSON(500, map[string]string{"message": fmt.Sprintf("生成 Token 失败：%v", err)})
 				return
 			}
-			ctx.JSON(map[string]string{
+			ctx.JSON(200, map[string]string{
 				"message": "登陆成功",
 				"token":   token})
 		}
 		return
 	}
-	ctx.JSON(map[string]string{"message": "密码错误"})
+	ctx.JSON(500, map[string]string{"message": "密码错误"})
 }
 
 type Claims struct {
@@ -118,7 +145,7 @@ func generateToken(user User) (string, error) {
 func Register(ctx capybara.Context) {
 	currentUser := User{}
 	if err := ctx.Bind(&currentUser); err != nil {
-		ctx.JSON(map[string]string{"message": err.Error()})
+		ctx.JSON(500, map[string]string{"message": err.Error()})
 	}
 	fmt.Println(currentUser.Name, currentUser.Password)
 
@@ -132,7 +159,7 @@ func Register(ctx capybara.Context) {
 		}
 	} else {
 		fmt.Printf("用户名 '%s' 已存在\n", currentUser.Name)
-		ctx.JSON(map[string]string{"message:": "用户名已经存在"})
+		ctx.JSON(500, map[string]string{"message": "用户名已经存在"})
 		return
 	}
 
@@ -141,18 +168,17 @@ func Register(ctx capybara.Context) {
 	if result.Error != nil {
 		panic("failed to create user")
 	}
-	ctx.JSON(map[string]string{"message:": "用户注册成功"})
+	ctx.JSON(200, map[string]string{"message:": "用户注册成功"})
 }
 
 func ViewUserInformation(ctx capybara.Context) {
-
-	ctx.JSON(map[string]string{"message": "ViewUserInformation"})
+	ctx.JSON(200, map[string]string{"message": "ViewUserInformation"})
 }
 
 // 日志中间件
 func Logging(next capybara.HandlerFunc) capybara.HandlerFunc {
 	return func(ctx capybara.Context) {
-		ctx.JSON(map[string]string{"message": "Logging"})
+		ctx.JSON(200, map[string]string{"message": "Logging"})
 		log.Printf("Resquest: %s, %s", ctx.Request().URL, ctx.Request().Method)
 		next(ctx)
 	}
@@ -161,7 +187,7 @@ func Logging(next capybara.HandlerFunc) capybara.HandlerFunc {
 func ScanClient() capybara.Middlewares {
 	return func(next capybara.HandlerFunc) capybara.HandlerFunc {
 		return func(ctx capybara.Context) {
-			ctx.JSON(map[string]string{"message": "ScanClient"})
+			ctx.JSON(200, map[string]string{"message": "ScanClient"})
 			next(ctx)
 		}
 	}
@@ -172,13 +198,13 @@ func JWTAuth2(secert string) capybara.Middlewares {
 		return func(ctx capybara.Context) {
 			authHeader := ctx.GetHeader("Authorization")
 			if authHeader == "" {
-				ctx.JSON(map[string]string{"error": "Authorization header missing"})
+				ctx.JSON(404, map[string]string{"error": "Authorization header missing"})
 				return
 			}
 			// 提取 Token 字符串
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 			if tokenString == authHeader {
-				ctx.JSON(map[string]string{"error": "Invalid token format"})
+				ctx.JSON(404, map[string]string{"error": "Invalid token format"})
 				return
 			}
 			token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -188,16 +214,17 @@ func JWTAuth2(secert string) capybara.Middlewares {
 				return []byte(secert), nil
 			})
 			if err != nil || !token.Valid {
-				ctx.JSON(map[string]string{"error": "Invalid token"})
+				ctx.JSON(404, map[string]string{"error": "Invalid token"})
 				return
 			}
 			// 存储 Claims 到上下文
 			if claims, ok := token.Claims.(jwt.MapClaims); ok {
 				ctx.Set("user", claims)
 			} else {
-				ctx.JSON(map[string]string{"error": "Failed to parse token claims"})
+				ctx.JSON(404, map[string]string{"error": "Failed to parse token claims"})
 				return
 			}
+			ctx.JSON(200, map[string]string{"message": "auth middlewares ok"})
 			next(ctx)
 		}
 	}

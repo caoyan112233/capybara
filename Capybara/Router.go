@@ -8,6 +8,15 @@ type Router struct {
 	middlewares []Middlewares
 }
 
+func NewRouter() *Router {
+	return &Router{
+		tree: &node{
+			children:  make(map[string]*node),
+			wildChild: new(node),
+			handler:   make(map[string]HandlerFunc),
+		},
+	}
+}
 func (r *Router) GET(path string, handler HandlerFunc, middlewares ...Middlewares) {
 	fullPath := joinPath(r.prefix, path)
 	if len(r.middlewares) != 0 {
