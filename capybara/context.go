@@ -25,11 +25,11 @@ type Context interface {
 }
 
 type context struct {
-	w    http.ResponseWriter
-	r    *http.Request
-	data map[string]interface{}
-	capa *capybara
-	// params map[string]string
+	w      http.ResponseWriter
+	r      *http.Request
+	data   map[string]interface{}
+	capa   *capybara
+	params map[string]string
 }
 
 func (c *context) JSON(code int, data interface{}) error {
@@ -68,7 +68,14 @@ func (c *context) HTML(code int, html string) error {
 
 func (c *context) Param(name string) string {
 	// TODO  解决这个参数索引
-	return c.capa.router.tree.paramKey
+	// 需求：http://localhost:8080/user/123/post/456
+	//                           /user/:id/post/:post_id
+	// id ： 123
+	// post_id : 456
+	if _, ok := c.params[name]; !ok {
+		return ""
+	}
+	return c.params[name]
 }
 
 func (c *context) Request() *http.Request {

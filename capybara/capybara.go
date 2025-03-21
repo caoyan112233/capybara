@@ -22,7 +22,7 @@ func New() *capybara {
 		pool: sync.Pool{
 			New: func() interface{} {
 				// 当池中无可用对象时，自动调用此函数创建新对象
-				return new(context) // 可以是结构体、切片等任意类型
+				return new(context)
 			}},
 	}
 	return c
@@ -33,21 +33,20 @@ func (c *capybara) Run(addr string) {
 }
 
 func (c *capybara) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	currentNode := c.router.tree.matchRoute(r.URL.Path)
-	if currentNode != nil {
-		// 从h池中取出一个context对象
+	handler, params, method := c.router.tree.FindRoute(r.URL.Path)
+	if handler != nil && len(params) != 0 && method != "" {
+		// 从池中取出一个context对象
 		currContext := c.pool.Get().(*context)
 		currContext.capa = c
 		currContext.w = w
 		currContext.r = r
 		currContext.data = make(map[string]interface{})
-
-		if currentNode.handler[r.Method] != nil {
-			currentNode.handler[r.Method](currContext)
-			c.pool.Put(currContext)
-		} else {
+		currContext.params = params
+		if method != r.Method {
 			sendError(w, "Error method")
+			return
 		}
+		handler(currContext)
 	} else {
 		sendError(w, "Error url")
 	}
@@ -60,12 +59,12 @@ func sendError(w http.ResponseWriter, data interface{}) {
 
 func (c *capybara) GET(path string, handler HandlerFunc, middlewares ...Middlewares) {
 	h := applyMiddlewares(handler, middlewares...)
-	c.router.tree.addRoute(path, "GET", h)
+	c.router.tree.insertRoute(path, "GET", h)
 }
 
 func (c *capybara) POST(path string, handler HandlerFunc, middlewares ...Middlewares) {
 	h := applyMiddlewares(handler, middlewares...)
-	c.router.tree.addRoute(path, "POST", h)
+	c.router.tree.insertRoute(path, "POST", h)
 }
 
 func applyMiddlewares(handler HandlerFunc, middlewares ...Middlewares) HandlerFunc {

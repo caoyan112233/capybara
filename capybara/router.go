@@ -2,19 +2,15 @@ package capybara
 
 // **** Router
 type Router struct {
-	tree        *node
 	c           *capybara
+	tree        *node
 	prefix      string
 	middlewares []Middlewares
 }
 
 func NewRouter() *Router {
 	return &Router{
-		tree: &node{
-			children:  make(map[string]*node),
-			wildChild: new(node),
-			handler:   make(map[string]HandlerFunc),
-		},
+		tree: InitNode(),
 	}
 }
 func (r *Router) GET(path string, handler HandlerFunc, middlewares ...Middlewares) {
