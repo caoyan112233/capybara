@@ -6,10 +6,10 @@ import (
 
 type node struct {
 	path      string           // 当前结点的名字
-	childrens map[string]*node //当前结点的子结点
+	childrens map[string]*node // 当前结点的子结点
 	isWild    bool             // 是否为通配符结点
-	handler   HandlerFunc
-	method    string
+	handler   HandlerFunc      // 当前路由的路由函数
+	method    string           // 当前路由的请求方法
 }
 
 // 插入路径

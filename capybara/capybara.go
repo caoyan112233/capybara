@@ -72,7 +72,9 @@ func applyMiddlewares(handler HandlerFunc, middlewares ...Middlewares) HandlerFu
 
 func (c *capybara) Group(prefix string) *Router {
 	return &Router{
-		prefix: prefix,
-		c:      c,
+		prefix:      prefix,
+		c:           c,
+		tree:        InitNode(),
+		middlewares: make([]Middlewares, 0),
 	}
 }

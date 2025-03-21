@@ -11,6 +11,9 @@ type Router struct {
 func NewRouter() *Router {
 	return &Router{
 		tree: InitNode(),
+		// c:           nil,
+		// prefix:      "",
+		// middlewares: make([]Middlewares, 0),
 	}
 }
 func (r *Router) GET(path string, handler HandlerFunc, middlewares ...Middlewares) {

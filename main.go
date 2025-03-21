@@ -25,18 +25,18 @@ func main() {
 	// 	fmt.Println(id)
 	// })
 
-	cap.GET("/user/:id/post/:post_id", func(c capybara.Context) {
-		id := c.Param("post_id") // 获取路径参数 "id"
-		c.JSON(200, map[string]string{"post_id": id})
-	})
+	// cap.GET("/user/:id/post/:post_id", func(c capybara.Context) {
+	// 	id := c.Param("post_id") // 获取路径参数 "id"
+	// 	c.JSON(200, map[string]string{"post_id": id})
+	// })
 	// 路由组
 	// authGroup := cap.Group("/auth")
 	// authGroup.POST("/login", Login, Logging)
 	// authGroup.POST("/register", Register, Logging)
 
-	// profileGroup := cap.Group("/profile")
-	// profileGroup.Use(JWTAuth2("capybara"))
-	// profileGroup.POST("/viewUser", ViewUserInformation, Logging)
+	profileGroup := cap.Group("/profile")
+	profileGroup.Use(JWTAuth2("capybara"))
+	profileGroup.POST("/viewUser", ViewUserInformation, Logging)
 
 	// cap.GET("/html", HtmlTest)
 	cap.Run(":8080")
