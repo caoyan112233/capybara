@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	capybara "goweb2/Capybara"
+	"goweb2/capybara"
+
 	"log"
 	"strings"
 	"time"
