@@ -1,4 +1,4 @@
-module goweb2
+module github.com/cy-cst/capybara.git
 
 go 1.24.0
 
