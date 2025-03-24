@@ -22,14 +22,20 @@ type Context interface {
 	Bind(data interface{}) (err error)
 
 	Param(name string) string
+	Path() string
+	Handler() HandlerFunc
+	Cookie(name string) (*http.Cookie, error)
+	Cookies() []*http.Cookie
 }
 
 type context struct {
-	w      http.ResponseWriter
-	r      *http.Request
-	data   map[string]interface{}
-	capa   *capybara
-	params map[string]string
+	w       http.ResponseWriter
+	r       *http.Request
+	data    map[string]interface{}
+	capa    *capybara
+	params  map[string]string
+	path    string
+	handler HandlerFunc
 }
 
 // 应用到当前的 context
@@ -85,6 +91,24 @@ func (c *context) Param(name string) string {
 	}
 	return c.params[name]
 }
+
+func (c *context) Path() string {
+	return c.path
+}
+
+func (c *context) Handler() HandlerFunc {
+	return c.handler
+}
+
+// 返回Cookie
+func (c *context) Cookie(name string) (*http.Cookie, error) {
+	return c.r.Cookie(name)
+}
+
+func (c *context) Cookies() []*http.Cookie {
+	return c.r.Cookies()
+}
+
 
 func (c *context) Request() *http.Request {
 	return c.r

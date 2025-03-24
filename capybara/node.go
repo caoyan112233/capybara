@@ -5,11 +5,12 @@ import (
 )
 
 type node struct {
-	path      string           // 当前结点的名字
+	name      string           // 当前结点的名字
 	childrens map[string]*node // 当前结点的子结点
 	isWild    bool             // 是否为通配符结点
 	handler   HandlerFunc      // 当前路由的路由函数
 	method    string           // 当前路由的请求方法
+	fullPath  string           // 当前结点的完整路由
 }
 
 // 插入路径
@@ -22,7 +23,7 @@ func (n *node) insertRoute(path string, method string, handler HandlerFunc) {
 	for i := 0; i < len(segments); i++ {
 		if _, exists := currNode.childrens[segments[i]]; !exists {
 			currNode.childrens[segments[i]] = &node{
-				path:      segments[i],
+				name:      segments[i],
 				childrens: make(map[string]*node),
 				isWild:    strings.HasPrefix(segments[i], ":") || segments[i][0] == '*',
 			}
@@ -31,10 +32,11 @@ func (n *node) insertRoute(path string, method string, handler HandlerFunc) {
 	}
 	currNode.handler = handler
 	currNode.method = method
+	currNode.fullPath = path
 }
 
 // 找结点路径
-func (n *node) FindRoute(path string) (HandlerFunc, map[string]string, string) {
+func (n *node) FindRoute(path string) (HandlerFunc, map[string]string, []string) {
 	segments := splitPath(path)
 	currNode := n
 	params := make(map[string]string)
@@ -53,13 +55,13 @@ func (n *node) FindRoute(path string) (HandlerFunc, map[string]string, string) {
 			}
 		}
 	}
-	return currNode.handler, params, currNode.method
+	return currNode.handler, params, []string{currNode.method, currNode.fullPath}
 }
 
 // 初始化单个结点
 func InitNode() *node {
 	return &node{
-		path:      "",
+		name:      "",
 		method:    "",
 		childrens: make(map[string]*node),
 		isWild:    false,

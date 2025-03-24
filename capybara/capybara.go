@@ -33,12 +33,15 @@ func (c *capybara) Run(addr string) {
 }
 
 func (c *capybara) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	handler, params, method := c.router.tree.FindRoute(r.URL.Path)
-	if handler != nil && len(params) != 0 && method != "" {
+	handler, params, fields := c.router.tree.FindRoute(r.URL.Path)
+	if handler != nil && len(params) != 0 && fields[0] != "" {
 		// 从池中取出一个context对象
 		currContext := c.pool.Get().(*context)
 		currContext.ApplyContext(c, params, w, r)
-		if method != r.Method {
+		currContext.path = fields[1]
+		currContext.handler = handler
+
+		if fields[0] != r.Method {
 			sendError(w, "Error method")
 			return
 		}
@@ -55,6 +58,7 @@ func sendError(w http.ResponseWriter, data interface{}) {
 
 func (c *capybara) GET(path string, handler HandlerFunc, middlewares ...Middlewares) {
 	h := applyMiddlewares(handler, middlewares...)
+
 	c.router.tree.insertRoute(path, "GET", h)
 }
 
