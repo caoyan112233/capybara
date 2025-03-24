@@ -6,6 +6,8 @@ import (
 	"sync"
 )
 
+const StatusOK = 200
+
 type HandlerFunc func(Context)
 
 // Middlewares
@@ -14,6 +16,7 @@ type Middlewares func(HandlerFunc) HandlerFunc
 type capybara struct {
 	router *Router
 	pool   sync.Pool
+	logger *CapybaraLogger
 }
 
 func CreateCapybaraInstance() *capybara {
@@ -24,13 +27,16 @@ func CreateCapybaraInstance() *capybara {
 				// 当池中无可用对象时，自动调用此函数创建新对象
 				return new(context)
 			}},
+		logger: InitLogger(),
 	}
 	c.router.c = c
 	return c
 }
 
-func (c *capybara) Run(addr string) {
-	http.ListenAndServe(addr, c)
+func (c *capybara) Run(addr string) error {
+	c.logger.Info(addr + " running")
+	err := http.ListenAndServe(addr, c)
+	return err
 }
 
 func (c *capybara) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +52,7 @@ func (c *capybara) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			sendError(w, "Error method")
 			return
 		}
+		c.logger.Info("Call a " + r.Method + " - 200")
 		handler(currContext)
 	} else {
 		sendError(w, "Error url")

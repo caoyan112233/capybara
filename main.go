@@ -42,7 +42,7 @@ func main() {
 	// profileGroup.POST("/viewUser", ViewUserInformation, Logging)
 
 	// cap.GET("/html", HtmlTest)
-	fmt.Println("Serve run")
+
 	cap.Run(":8080")
 }
 
