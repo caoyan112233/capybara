@@ -47,7 +47,7 @@ func (r *Router) DELETE(path string, handler HandlerFunc, middlewares ...Middlew
 	if len(r.middlewares) != 0 {
 		handler = applyMiddlewares(handler, r.middlewares...)
 	}
-	r.c.POST(fullPath, handler, middlewares...)
+	r.c.DELETE(fullPath, handler, middlewares...)
 }
 
 // http 请求组的  HEAD 方法
@@ -56,7 +56,7 @@ func (r *Router) HEAD(path string, handler HandlerFunc, middlewares ...Middlewar
 	if len(r.middlewares) != 0 {
 		handler = applyMiddlewares(handler, r.middlewares...)
 	}
-	r.c.POST(fullPath, handler, middlewares...)
+	r.c.HEAD(fullPath, handler, middlewares...)
 }
 
 // http 请求组的  OPTIONS 方法
@@ -65,7 +65,7 @@ func (r *Router) OPTIONS(path string, handler HandlerFunc, middlewares ...Middle
 	if len(r.middlewares) != 0 {
 		handler = applyMiddlewares(handler, r.middlewares...)
 	}
-	r.c.POST(fullPath, handler, middlewares...)
+	r.c.OPTIONS(fullPath, handler, middlewares...)
 }
 
 // http 请求组的  PATCH 方法
@@ -74,7 +74,7 @@ func (r *Router) PATCH(path string, handler HandlerFunc, middlewares ...Middlewa
 	if len(r.middlewares) != 0 {
 		handler = applyMiddlewares(handler, r.middlewares...)
 	}
-	r.c.POST(fullPath, handler, middlewares...)
+	r.c.PATCH(fullPath, handler, middlewares...)
 }
 
 // http 请求组的  PUT 方法
@@ -83,7 +83,7 @@ func (r *Router) PUT(path string, handler HandlerFunc, middlewares ...Middleware
 	if len(r.middlewares) != 0 {
 		handler = applyMiddlewares(handler, r.middlewares...)
 	}
-	r.c.POST(fullPath, handler, middlewares...)
+	r.c.PUT(fullPath, handler, middlewares...)
 }
 
 // http 请求组的  TRACE 方法
@@ -92,7 +92,7 @@ func (r *Router) TRACE(path string, handler HandlerFunc, middlewares ...Middlewa
 	if len(r.middlewares) != 0 {
 		handler = applyMiddlewares(handler, r.middlewares...)
 	}
-	r.c.POST(fullPath, handler, middlewares...)
+	r.c.TRACE(fullPath, handler, middlewares...)
 }
 
 func (r *Router) Use(middlewares ...Middlewares) *Router {

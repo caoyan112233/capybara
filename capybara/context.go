@@ -64,6 +64,16 @@ func (c *context) ApplyContext(cap *capybara, params map[string]string, w http.R
 	c.params = params
 }
 
+func (c *context) Reset() {
+	c.w = nil
+	c.r = nil
+	c.data = make(map[string]interface{}, 0)
+	c.capa = nil
+	c.params = make(map[string]string)
+	c.path = ""
+	c.handler = nil
+}
+
 // 发送JSON格式的文件
 func (c *context) JSON(code int, data interface{}) error {
 	c.w.Header().Set(CONTENT_TYPE, APPLICATION_JSON)

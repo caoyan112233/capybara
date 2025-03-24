@@ -8,8 +8,6 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
-const StatusOK = 200
-
 // MIME
 const (
 	// application type
@@ -20,6 +18,7 @@ const (
 	TEXT_HTML  = "text/html"
 	TEXT_PLAIN = "text/plain"
 )
+
 const (
 	CONTENT_TYPE = "Content-Type"
 )
@@ -72,29 +71,33 @@ func (c *capybara) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if handler != nil && len(params) != 0 && fields[0] != "" {
 		// 从池中取出一个context对象
 		currContext := c.pool.Get().(*context)
+		// 确保方法结束时关闭这个池
+		defer c.pool.Put(currContext)
+		currContext.Reset()
 		currContext.ApplyContext(c, params, w, r)
 		currContext.path = fields[1]
 		currContext.handler = handler
 
 		if fields[0] != r.Method {
-			sendError(w, "Error method")
+			sendError(500, w, "Error method")
 			return
 		}
 		c.logger.Info("Call a " + r.Method + " - 200")
 		handler(currContext)
 	} else {
-		sendError(w, "Error url")
+		sendError(500, w, "Error url")
 	}
 }
 
-func sendError(w http.ResponseWriter, data interface{}) {
+func sendError(code int, w http.ResponseWriter, data interface{}) {
+	w.Header().Set(CONTENT_TYPE, APPLICATION_JSON)
+	w.WriteHeader(code)
 	jsonEncoder := json.NewEncoder(w)
-	jsonEncoder.Encode(data)
+	jsonEncoder.Encode(map[string]interface{}{"error": data})
 }
 
 func (c *capybara) GET(path string, handler HandlerFunc, middlewares ...Middlewares) {
 	h := applyMiddlewares(handler, middlewares...)
-
 	c.router.tree.insertRoute(path, "GET", h)
 }
 
@@ -105,27 +108,32 @@ func (c *capybara) POST(path string, handler HandlerFunc, middlewares ...Middlew
 
 func (c *capybara) DELETE(path string, handler HandlerFunc, middlewares ...Middlewares) {
 	h := applyMiddlewares(handler, middlewares...)
-	c.router.tree.insertRoute(path, "POST", h)
+	c.router.tree.insertRoute(path, "DELETE", h)
 }
 
 func (c *capybara) PUT(path string, handler HandlerFunc, middlewares ...Middlewares) {
 	h := applyMiddlewares(handler, middlewares...)
-	c.router.tree.insertRoute(path, "POST", h)
+	c.router.tree.insertRoute(path, "PUT", h)
 }
 
 func (c *capybara) PATCH(path string, handler HandlerFunc, middlewares ...Middlewares) {
 	h := applyMiddlewares(handler, middlewares...)
-	c.router.tree.insertRoute(path, "POST", h)
+	c.router.tree.insertRoute(path, "PATCH", h)
 }
 
 func (c *capybara) HEAD(path string, handler HandlerFunc, middlewares ...Middlewares) {
 	h := applyMiddlewares(handler, middlewares...)
-	c.router.tree.insertRoute(path, "POST", h)
+	c.router.tree.insertRoute(path, "HEAD", h)
 }
 
 func (c *capybara) OPTIONS(path string, handler HandlerFunc, middlewares ...Middlewares) {
 	h := applyMiddlewares(handler, middlewares...)
-	c.router.tree.insertRoute(path, "POST", h)
+	c.router.tree.insertRoute(path, "OPTIONS", h)
+}
+
+func (c *capybara) TRACE(path string, handler HandlerFunc, middlewares ...Middlewares) {
+	h := applyMiddlewares(handler, middlewares...)
+	c.router.tree.insertRoute(path, "TRACE", h)
 }
 
 func applyMiddlewares(handler HandlerFunc, middlewares ...Middlewares) HandlerFunc {
@@ -141,5 +149,18 @@ func (c *capybara) Group(prefix string) *Router {
 		c:           c,
 		tree:        InitNode(),
 		middlewares: make([]Middlewares, 0),
+	}
+}
+
+func Recovery() Middlewares {
+	return func(next HandlerFunc) HandlerFunc {
+		return func(ctx Context) {
+			defer func() {
+				if err := recover(); err != nil {
+					ctx.JSON(502, map[string]string{"error": "StatusInternalServerError"})
+				}
+			}()
+			next(ctx)
+		}
 	}
 }
