@@ -1,6 +1,11 @@
 package capybara
 
 // **** Router
+
+// 一个路由管理者的用途：
+//
+// 包含一个路由树，树中存储了一条条的路由
+// 
 type Router struct {
 	c           *capybara
 	tree        *node
