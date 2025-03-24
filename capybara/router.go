@@ -5,7 +5,8 @@ package capybara
 // 一个路由管理者的用途：
 //
 // 包含一个路由树，树中存储了一条条的路由
-// 
+// 路由组的前缀
+// 路由的中间件函数
 type Router struct {
 	c           *capybara
 	tree        *node
