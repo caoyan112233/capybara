@@ -47,6 +47,7 @@ func (c *context) ApplyContext(cap *capybara, params map[string]string, w http.R
 	c.params = params
 }
 
+// 发送JSON格式的文件
 func (c *context) JSON(code int, data interface{}) error {
 	jsonEncoder := json.NewEncoder(c.w)
 	err := jsonEncoder.Encode(data)
@@ -56,6 +57,7 @@ func (c *context) JSON(code int, data interface{}) error {
 	return nil
 }
 
+// 发送String格式的文件
 func (c *context) String(code int, s string) error {
 	c.w.Header().Set("Content-Type", "text/plain")
 	c.w.WriteHeader(code)
@@ -63,6 +65,7 @@ func (c *context) String(code int, s string) error {
 	return err
 }
 
+// 发送 XML格式的文件
 func (c *context) XML(code int, data interface{}) error {
 	c.w.Header().Set("Content-Type", "application/xml")
 	c.w.WriteHeader(code)
@@ -74,6 +77,7 @@ func (c *context) XML(code int, data interface{}) error {
 	return nil
 }
 
+// 发送HTNLi格式的文件
 func (c *context) HTML(code int, html string) error {
 	c.w.Header().Set("Content-Type", "text/html")
 	c.w.WriteHeader(code)
@@ -81,21 +85,32 @@ func (c *context) HTML(code int, html string) error {
 	return err
 }
 
+// 获取一个 路由中的某个指定的参数
+//
+//	例如：
+//
+// http://localhost:8080/user/123/post/456
+//
+//	/user/:id/post/:post_id
+//
+// id ： 123
+// post_id : 456
 func (c *context) Param(name string) string {
-	// 需求：http://localhost:8080/user/123/post/456
-	//                           /user/:id/post/:post_id
-	// id ： 123
-	// post_id : 456
+
 	if _, ok := c.params[name]; !ok {
 		return ""
 	}
 	return c.params[name]
 }
 
+// 获取路由路径
+//
+// /user/:id/post/:post_id
 func (c *context) Path() string {
 	return c.path
 }
 
+// 获取路由函数
 func (c *context) Handler() HandlerFunc {
 	return c.handler
 }
@@ -108,7 +123,6 @@ func (c *context) Cookie(name string) (*http.Cookie, error) {
 func (c *context) Cookies() []*http.Cookie {
 	return c.r.Cookies()
 }
-
 
 func (c *context) Request() *http.Request {
 	return c.r

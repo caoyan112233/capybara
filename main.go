@@ -30,6 +30,7 @@ func main() {
 			"post_id": post_id,
 			"path":    ctx.Path(),
 			"handler": funcType.Name()})
+		fmt.Println(ctx.Cookie("session_id"))
 	})
 	// 路由组
 	// authGroup := cap.Group("/auth")
