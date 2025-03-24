@@ -2,6 +2,17 @@
 *A beginner made Go web framework.*  
 ---
 
+## **Completed tasks**
+HTTP request methods
+- ** GET     ✅
+- ** POST    ✅
+- ** DELETE  ✅
+- ** HEAD    ✅
+- ** OPTIONS ✅
+- ** PATCH   ✅
+- ** PUT     ✅
+- ** TRACE   ✅
+
 ## ​**Feature Overview**  
 
 ### ​**Core Features (Quoting the features of echo)**  

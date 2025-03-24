@@ -16,7 +16,7 @@ type capybara struct {
 	pool   sync.Pool
 }
 
-func New() *capybara {
+func CreateCapybaraInstance() *capybara {
 	c := &capybara{
 		router: NewRouter(),
 		pool: sync.Pool{
@@ -25,6 +25,7 @@ func New() *capybara {
 				return new(context)
 			}},
 	}
+	c.router.c = c
 	return c
 }
 
@@ -63,6 +64,31 @@ func (c *capybara) GET(path string, handler HandlerFunc, middlewares ...Middlewa
 }
 
 func (c *capybara) POST(path string, handler HandlerFunc, middlewares ...Middlewares) {
+	h := applyMiddlewares(handler, middlewares...)
+	c.router.tree.insertRoute(path, "POST", h)
+}
+
+func (c *capybara) DELETE(path string, handler HandlerFunc, middlewares ...Middlewares) {
+	h := applyMiddlewares(handler, middlewares...)
+	c.router.tree.insertRoute(path, "POST", h)
+}
+
+func (c *capybara) PUT(path string, handler HandlerFunc, middlewares ...Middlewares) {
+	h := applyMiddlewares(handler, middlewares...)
+	c.router.tree.insertRoute(path, "POST", h)
+}
+
+func (c *capybara) PATCH(path string, handler HandlerFunc, middlewares ...Middlewares) {
+	h := applyMiddlewares(handler, middlewares...)
+	c.router.tree.insertRoute(path, "POST", h)
+}
+
+func (c *capybara) HEAD(path string, handler HandlerFunc, middlewares ...Middlewares) {
+	h := applyMiddlewares(handler, middlewares...)
+	c.router.tree.insertRoute(path, "POST", h)
+}
+
+func (c *capybara) OPTIONS(path string, handler HandlerFunc, middlewares ...Middlewares) {
 	h := applyMiddlewares(handler, middlewares...)
 	c.router.tree.insertRoute(path, "POST", h)
 }

@@ -19,7 +19,7 @@ var DB *gorm.DB
 func main() {
 	// 初始化数据库
 	//	InitDatabase()
-	cap := capybara.New()
+	cap := capybara.CreateCapybaraInstance()
 
 	cap.GET("/user/:id/post/:post_id", func(ctx capybara.Context) {
 		id := ctx.Param("id")           // 获取路径参数 "id"
@@ -42,6 +42,7 @@ func main() {
 	// profileGroup.POST("/viewUser", ViewUserInformation, Logging)
 
 	// cap.GET("/html", HtmlTest)
+	fmt.Println("Serve run")
 	cap.Run(":8080")
 }
 
