@@ -4,9 +4,25 @@ import (
 	"encoding/json"
 	"net/http"
 	"sync"
+
+	"golang.org/x/crypto/acme/autocert"
 )
 
 const StatusOK = 200
+
+// MIME
+const (
+	// application type
+	APPLICATION_JSON = "application/json"
+	APPLICATION_XML  = "application/xml"
+	// text type
+	TEXT_XML   = "text/xml"
+	TEXT_HTML  = "text/html"
+	TEXT_PLAIN = "text/plain"
+)
+const (
+	CONTENT_TYPE = "Content-Type"
+)
 
 type HandlerFunc func(Context)
 
@@ -14,9 +30,10 @@ type HandlerFunc func(Context)
 type Middlewares func(HandlerFunc) HandlerFunc
 
 type capybara struct {
-	router *Router
-	pool   sync.Pool
-	logger *CapybaraLogger
+	router     *Router
+	pool       sync.Pool
+	logger     *CapybaraLogger
+	TLSManager autocert.Manager
 }
 
 func CreateCapybaraInstance() *capybara {
@@ -28,14 +45,25 @@ func CreateCapybaraInstance() *capybara {
 				return new(context)
 			}},
 		logger: InitLogger(),
+		TLSManager: autocert.Manager{
+			Prompt: autocert.AcceptTOS,
+		},
 	}
 	c.router.c = c
 	return c
 }
 
+// 启动非https 的服务
 func (c *capybara) Run(addr string) error {
 	c.logger.Info(addr + " running")
 	err := http.ListenAndServe(addr, c)
+	return err
+}
+
+// 启动https 的服务
+func (c *capybara) RunTLS(addr string, certFile string, keyFile string) error {
+	c.logger.Info(addr + " running TLS")
+	err := http.ListenAndServeTLS(addr, certFile, keyFile, c)
 	return err
 }
 

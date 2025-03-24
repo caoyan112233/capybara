@@ -6,24 +6,41 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strings"
 )
 
 // **** context
 type Context interface {
+	// 请求与响应对象操作
+	Request() *http.Request
+
+	// 连接信息检查
+	IsTLS() bool
+	IsWebSocket() bool
+	RealIP() string
+
+	// 路径参数处理
+	Param(name string) string
+	Path() string
+
+	// 响应生成与发送
 	JSON(code int, data interface{}) error
 	XML(code int, data interface{}) error
 	String(code int, s string) error
 	HTML(code int, html string) error
 
-	Request() *http.Request
-	GetHeader(key string) string
+	// 上下文数据存储
 	Set(key string, value interface{})
 	Get(key string) interface{}
+
+	// 数据绑定与验证
 	Bind(data interface{}) (err error)
 
-	Param(name string) string
-	Path() string
+	// 获取信息
+	GetHeader(key string) string
 	Handler() HandlerFunc
+	SetHandler(h HandlerFunc)
+	// 请求数据提取
 	Cookie(name string) (*http.Cookie, error)
 	Cookies() []*http.Cookie
 }
@@ -49,6 +66,8 @@ func (c *context) ApplyContext(cap *capybara, params map[string]string, w http.R
 
 // 发送JSON格式的文件
 func (c *context) JSON(code int, data interface{}) error {
+	c.w.Header().Set(CONTENT_TYPE, APPLICATION_JSON)
+	c.w.WriteHeader(code)
 	jsonEncoder := json.NewEncoder(c.w)
 	err := jsonEncoder.Encode(data)
 	if err != nil {
@@ -59,7 +78,7 @@ func (c *context) JSON(code int, data interface{}) error {
 
 // 发送String格式的文件
 func (c *context) String(code int, s string) error {
-	c.w.Header().Set("Content-Type", "text/plain")
+	c.w.Header().Set(CONTENT_TYPE, TEXT_PLAIN)
 	c.w.WriteHeader(code)
 	_, err := c.w.Write([]byte(s))
 	return err
@@ -67,7 +86,7 @@ func (c *context) String(code int, s string) error {
 
 // 发送 XML格式的文件
 func (c *context) XML(code int, data interface{}) error {
-	c.w.Header().Set("Content-Type", "application/xml")
+	c.w.Header().Set(CONTENT_TYPE, APPLICATION_XML)
 	c.w.WriteHeader(code)
 	xmlEncoder := xml.NewEncoder(c.w)
 	err := xmlEncoder.Encode(data)
@@ -79,7 +98,7 @@ func (c *context) XML(code int, data interface{}) error {
 
 // 发送HTNLi格式的文件
 func (c *context) HTML(code int, html string) error {
-	c.w.Header().Set("Content-Type", "text/html")
+	c.w.Header().Set(CONTENT_TYPE, TEXT_HTML)
 	c.w.WriteHeader(code)
 	_, err := c.w.Write([]byte(html))
 	return err
@@ -158,4 +177,33 @@ func (c *context) Bind(data interface{}) (err error) {
 		return err
 	}
 	return err
+}
+
+// 是否 TLS 加密连接
+func (c *context) IsTLS() bool {
+	return c.r.TLS != nil
+}
+
+// 是否 WebSocket 连接
+func (c *context) IsWebSocket() bool {
+	upgrade := c.r.Header.Get("Upgrade")
+	return strings.EqualFold(upgrade, "websocket")
+}
+
+// TODO 解决这个方法的用途
+func (c *context) RealIP() string {
+	xForwardedFor := c.Request().Header.Get("X-Forwarded-For")
+	if xForwardedFor != "" {
+		// 按逗号分割IP列表
+		ips := strings.Split(xForwardedFor, ",")
+		for i := range ips {
+			ips[i] = strings.TrimSpace(ips[i])
+		}
+	}
+	return ""
+}
+
+// 设置路由处理函数
+func (c *context) SetHandler(handler HandlerFunc) {
+	c.handler = handler
 }
