@@ -35,6 +35,7 @@ type capybara struct {
 	TLSManager autocert.Manager
 }
 
+// 启动一个capybara实例
 func CreateCapybaraInstance() *capybara {
 	c := &capybara{
 		router: NewRouter(),
@@ -68,7 +69,7 @@ func (c *capybara) RunTLS(addr string, certFile string, keyFile string) error {
 
 func (c *capybara) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handler, params, fields := c.router.tree.FindRoute(r.URL.Path)
-	if handler != nil && len(params) != 0 && fields[0] != "" {
+	if handler != nil {
 		// 从池中取出一个context对象
 		currContext := c.pool.Get().(*context)
 		// 确保方法结束时关闭这个池
