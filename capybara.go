@@ -83,7 +83,7 @@ func (c *capybara) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			sendError(500, w, "Error method")
 			return
 		}
-		c.logger.Info("Call a " + r.Method + " - 200")
+		//c.logger.Info("Call a " + r.Method + " - 200")
 		handler(currContext)
 	} else {
 		sendError(500, w, "Error url")

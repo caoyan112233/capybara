@@ -18,7 +18,11 @@ func (n *node) insertRoute(path string, method string, handler HandlerFunc) {
 	// 例子： /user/:id/post/:post_id
 	// 先判断 user结点是否存在，如果不存在则创建一个user结点
 	// currentNode := n
+	if !checkPath(path) {
+		return
+	}
 	segments := splitPath(path)
+
 	currNode := n
 	for i := 0; i < len(segments); i++ {
 		if _, exists := currNode.childrens[segments[i]]; !exists {
@@ -27,6 +31,9 @@ func (n *node) insertRoute(path string, method string, handler HandlerFunc) {
 				childrens: make(map[string]*node),
 				isWild:    strings.HasPrefix(segments[i], ":") || segments[i][0] == '*',
 			}
+			currNode = currNode.childrens[segments[i]]
+		} else {
+			// 如果存在这个子结点，将这个子结点赋值给currNode
 			currNode = currNode.childrens[segments[i]]
 		}
 	}
@@ -40,7 +47,7 @@ func (n *node) FindRoute(path string) (HandlerFunc, map[string]string, []string)
 	segments := splitPath(path)
 	currNode := n
 	params := make(map[string]string)
-	for _, seg := range segments {
+	for i, seg := range segments {
 		if child, exists := currNode.childrens[seg]; exists {
 			currNode = child
 			continue
@@ -50,6 +57,10 @@ func (n *node) FindRoute(path string) (HandlerFunc, map[string]string, []string)
 			if child.isWild {
 				if strings.HasPrefix(key, ":") {
 					params[key[1:]] = seg
+				} else if strings.HasPrefix(key, "*") {
+					// 遇到了通配符，捕获剩余的路径
+					longPath := strings.Join(segments[i:], "/")
+					params[key[1:]] = longPath
 				}
 				currNode = child
 			}
