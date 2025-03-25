@@ -30,11 +30,9 @@ func (n *node) insertRoute(path string, method string, handler HandlerFunc) {
 				childrens: make(map[string]*node),
 				isWild:    strings.HasPrefix(segments[i], ":") || segments[i][0] == '*',
 			}
-			currNode = currNode.childrens[segments[i]]
-		} else {
-			// 如果存在这个子结点，将这个子结点赋值给currNode
-			currNode = currNode.childrens[segments[i]]
+
 		}
+		currNode = currNode.childrens[segments[i]]
 	}
 	currNode.handler = handler
 	currNode.method = method
@@ -42,7 +40,10 @@ func (n *node) insertRoute(path string, method string, handler HandlerFunc) {
 }
 
 // 找结点路径
-func (n *node) FindRoute(path string) (HandlerFunc, map[string]string, []string) {
+func (n *node) FindRoute(path string) (*node, map[string]string) {
+	if path == "" {
+		return nil, nil
+	}
 	segments := splitPath(path)
 	currNode := n
 	params := make(map[string]string)
@@ -51,7 +52,6 @@ func (n *node) FindRoute(path string) (HandlerFunc, map[string]string, []string)
 			currNode = child
 			continue
 		}
-
 		for key, child := range currNode.childrens {
 			if child.isWild {
 				if strings.HasPrefix(key, ":") {
@@ -65,7 +65,10 @@ func (n *node) FindRoute(path string) (HandlerFunc, map[string]string, []string)
 			}
 		}
 	}
-	return currNode.handler, params, []string{currNode.method, currNode.fullPath}
+	if currNode.handler == nil {
+		return nil, nil
+	}
+	return currNode, params
 }
 
 // 初始化单个结点

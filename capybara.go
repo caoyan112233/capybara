@@ -68,23 +68,22 @@ func (c *capybara) RunTLS(addr string, certFile string, keyFile string) error {
 }
 
 func (c *capybara) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	handler, params, fields := c.router.tree.FindRoute(r.URL.Path)
-	if handler != nil {
+	currNode, params := c.router.tree.FindRoute(r.URL.Path)
+	if currNode != nil {
+		if currNode.method != r.Method {
+			sendError(500, w, "Error method")
+			return
+		}
 		// 从池中取出一个context对象
 		currContext := c.pool.Get().(*context)
 		// 确保方法结束时关闭这个池
 		defer c.pool.Put(currContext)
 		currContext.Reset()
 		currContext.ApplyContext(c, params, w, r)
-		currContext.path = fields[1]
-		currContext.handler = handler
+		currContext.path = currNode.fullPath
+		currContext.handler = currNode.handler
 
-		if fields[0] != r.Method {
-			sendError(500, w, "Error method")
-			return
-		}
-		//c.logger.Info("Call a " + r.Method + " - 200")
-		handler(currContext)
+		currNode.handler(currContext)
 	} else {
 		sendError(500, w, "Error url")
 	}

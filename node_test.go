@@ -10,21 +10,20 @@ func TestNodeInsertAndFind(t *testing.T) {
 	testHandler := func(c Context) {}
 	// 测试基础路由
 	root.insertRoute("/user", "GET", testHandler)
-	if handler, _, _ := root.FindRoute("/user"); handler == nil {
+	if n, _ := root.FindRoute("/user"); n == nil {
 		t.Error("基础路由查找失败")
 	}
 
 	// 测试参数路由
 	root.insertRoute("/user/:id", "GET", testHandler)
-	_, params, _ := root.FindRoute("/user/123")
-	if params["id"] != "123" {
+	if _, params := root.FindRoute("/user/123"); params["id"] != "123" {
 		t.Error("参数路由解析失败")
 	}
 
 	// 测试通配符路由
 	root.insertRoute("/static/*filepath", "GET", testHandler)
-	_, params2, _ := root.FindRoute("/static/css/style.css")
-	if params2["filepath"] != "css/style.css" {
+	_, params := root.FindRoute("/static/css/style.css")
+	if params["filepath"] != "css/style.css" {
 		t.Error("通配符路由解析失败")
 	}
 }
@@ -35,7 +34,7 @@ func TestRouteConflict(t *testing.T) {
 	testHandler := func(c Context) {}
 	root.insertRoute("/user/delete", "GET", testHandler)
 	root.insertRoute("/user/:action", "POST", testHandler)
-	if handler, _, _ := root.FindRoute("/user/delete"); handler == nil {
+	if n, _ := root.FindRoute("/user/delete"); n == nil {
 		t.Error("静态路由被参数路由覆盖")
 	}
 }
@@ -50,7 +49,7 @@ func TestMethodOverride(t *testing.T) {
 	root.insertRoute("/login", "POST", postHandler)
 
 	// 验证方法存储
-	if _, _, methods := root.FindRoute("/login"); methods[0] != "POST" {
+	if n, _ := root.FindRoute("/login"); n.method != "POST" {
 		t.Error("方法覆盖异常")
 	}
 }
@@ -71,7 +70,8 @@ func TestNestedRoutes(t *testing.T) {
 	}
 
 	for _, route := range routes {
-		if handler, _, _ := root.FindRoute(route); handler == nil {
+		n, _ := root.FindRoute(route)
+		if n == nil {
 			t.Errorf("嵌套路由 %s 查找失败", route)
 		}
 	}
@@ -86,7 +86,7 @@ func TestWildcardPriority(t *testing.T) {
 	root.insertRoute("/v1/*catchall", "GET", testHandler)
 
 	// 验证精确匹配优先
-	if handler, _, _ := root.FindRoute("/v1/user"); handler == nil {
+	if n, _ := root.FindRoute("/v1/user"); n == nil {
 		t.Error("精确匹配优先级异常")
 	}
 }
@@ -126,13 +126,13 @@ func TestErrorHandling(t *testing.T) {
 	root := InitNode()
 
 	// 测试不存在的路由
-	if handler, _, _ := root.FindRoute("/not/exist"); handler != nil {
+	if n, _ := root.FindRoute("/not/exist"); n != nil {
 		t.Error("不存在路由错误处理异常")
 	}
 
 	// 测试非法路径
 	root.insertRoute("invalid_path", "GET", func(c Context) {})
-	if handler, _, _ := root.FindRoute("invalid_path"); handler != nil {
+	if n, _ := root.FindRoute("invalid_path"); n != nil {
 		t.Error("非法路径处理异常")
 	}
 }
@@ -143,7 +143,7 @@ func TestParamOverride(t *testing.T) {
 	testHandler := func(c Context) {}
 
 	root.insertRoute("/:category/:id", "GET", testHandler)
-	_, params, _ := root.FindRoute("/books/123")
+	_, params := root.FindRoute("/books/123")
 	if params["category"] != "books" || params["id"] != "123" {
 		t.Error("多参数解析失败")
 	}
