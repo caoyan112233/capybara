@@ -13,7 +13,7 @@ HTTP request methods
 - ** PUT     ✅
 - ** TRACE   ✅
 
-## ​**Feature Overview**  
+## ​**Feature Overviews**  
 
 ### ​**Core Features (Quoting the features of echo)**  
 - ❌ **Optimized HTTP Router**: A smart, high-performance router that intelligently prioritizes routes for maximum efficiency.  
