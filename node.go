@@ -22,7 +22,6 @@ func (n *node) insertRoute(path string, method string, handler HandlerFunc) {
 		return
 	}
 	segments := splitPath(path)
-
 	currNode := n
 	for i := 0; i < len(segments); i++ {
 		if _, exists := currNode.childrens[segments[i]]; !exists {

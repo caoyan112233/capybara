@@ -16,17 +16,22 @@ func joinPath(prefix, path string) string {
 }
 
 func splitPath(path string) []string {
-	// /api/v1//data/
-	// [api v1 "" data ""]
-	if path == "" {
-		return []string{}
-	}
-	segs := strings.Split(path, "/")
 	ans := make([]string, 0)
-	for _, s := range segs {
-		if s != "" {
-			ans = append(ans, s)
+	start := -1
+	for i := 0; i < len(path); i++ {
+		if path[i] == '/' {
+			if start != -1 {
+				ans = append(ans, path[start:i])
+				start = -1
+			}
+		} else {
+			if start == -1 {
+				start = i
+			}
 		}
+	}
+	if start != -1 {
+		ans = append(ans, path[start:])
 	}
 	return ans
 }

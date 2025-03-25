@@ -3,6 +3,8 @@ package capybara
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"runtime/pprof"
 	"testing"
 )
 
@@ -507,9 +509,6 @@ var (
 	apis = [][]*Route{githubAPI, gplusAPI, parseAPI}
 )
 
-func testRoutes() {
-}
-
 func benchmarkRoutes(b *testing.B, router http.Handler, routes []*Route) {
 	b.ReportAllocs()
 	r := httptest.NewRequest("GET", "/", nil)
@@ -549,9 +548,30 @@ func echoHandler(method, path string) HandlerFunc {
 }
 
 func BenchmarkEchoStatic(b *testing.B) {
+	// 0. 开启 CPU 性能分析
+	if cpuProfile := os.Getenv("CPU_PPROF"); cpuProfile != "" {
+		f, _ := os.Create(cpuProfile)
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
+	// 1. 初始化 Echo 实例
 	e := CreateCapybaraInstance()
 	loadEchoRoutes(e, static)
+
+	// 2. 重置计时器和内存统计
+	b.ResetTimer()
+	b.ReportAllocs() // 显示每次操作的内存分配
+
+	// 3. 运行基准测试
 	benchmarkRoutes(b, e, static)
+
+	// 4. 生成内存分析文件
+	if memProfile := os.Getenv("MEM_PPROF"); memProfile != "" {
+		f, _ := os.Create(memProfile)
+		defer f.Close()
+		pprof.WriteHeapProfile(f)
+	}
 }
 
 func BenchmarkEchoGitHubAPI(b *testing.B) {
