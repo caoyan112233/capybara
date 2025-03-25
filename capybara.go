@@ -8,19 +8,28 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
-// MIME
+// MIME（Multipurpose Internet Mail Extensions，多用途互联网邮件扩展）是一种用于描述文件类型和格式的标准，
+// 最初设计是为了扩展电子邮件的功能，使其能够支持非ASCII文本、二进制文件、多媒体内容等。如今，MIME类型广泛应用于
+// 互联网协议（如HTTP）、文件传输、Web开发等领域，是浏览器和服务器之间识别内容类型的核心机制。
 const (
 	// application type
-	APPLICATION_JSON = "application/json"
+	APPLICATION_JSON = "application/json" //JSON数据
 	APPLICATION_XML  = "application/xml"
 	// text type
 	TEXT_XML   = "text/xml"
-	TEXT_HTML  = "text/html"
+	TEXT_HTML  = "text/html" //HTML网页文件
 	TEXT_PLAIN = "text/plain"
 )
 
+// 头部常量
 const (
 	CONTENT_TYPE = "Content-Type"
+	// 标识客户端类型，常用于爬虫检测或统计客户端版本。
+	USERAGENT = "UserAgent"
+	// 传递认证信息（如Bearer Token），常用于API鉴权。
+	AUTHORIZATION = "Authorization"
+	// 表示请求或响应体的字节长度，如r.Header.Get("Content-Length")
+	CONTENT_LENGTH = "ContentLength"
 )
 
 type HandlerFunc func(Context)

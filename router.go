@@ -14,6 +14,7 @@ type Router struct {
 	middlewares []Middlewares
 }
 
+// 创建新的路由者
 func NewRouter() *Router {
 	return &Router{
 		tree:        InitNode(),
@@ -95,6 +96,7 @@ func (r *Router) TRACE(path string, handler HandlerFunc, middlewares ...Middlewa
 	r.c.TRACE(fullPath, handler, middlewares...)
 }
 
+// 使用中间件
 func (r *Router) Use(middlewares ...Middlewares) *Router {
 	r.middlewares = append(r.middlewares, middlewares...)
 	return r
