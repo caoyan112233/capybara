@@ -15,14 +15,19 @@ type node struct {
 
 // 插入路径
 func (n *node) insertRoute(path string, method string, handler HandlerFunc) {
-	// 例子： /user/:id/post/:post_id
-	// 先判断 user结点是否存在，如果不存在则创建一个user结点
-	// currentNode := n
-	if !checkPath(path) {
-		return
+	// 如果路由第一个字符不是/，我们就添加一个
+	if path[0] != '/' {
+		path = "/" + path
 	}
+	// 如果是空的路由，默认设置成 /
+	if path == "" {
+		path = "/"
+	}
+
 	segments := splitPath(path)
+	// 将目前结点作为一个根节点
 	currNode := n
+	
 	for i := 0; i < len(segments); i++ {
 		if _, exists := currNode.childrens[segments[i]]; !exists {
 			currNode.childrens[segments[i]] = &node{

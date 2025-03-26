@@ -5,6 +5,14 @@ import (
 	"testing"
 )
 
+func TestRadixTreeInsert1(t *testing.T) {
+	root := &RadixNode{children: make(map[string]*RadixNode)}
+	root.insert2("/abcd")
+	root.insert2("/abce")
+	root.insert2("/aecb")
+	root.insert2("/aecd")
+	t.Error("精确匹配优先级异常")
+}
 func TestNodeInsertAndFind(t *testing.T) {
 	root := InitNode()
 	testHandler := func(c Context) {}
@@ -100,6 +108,7 @@ func TestPathSplitting(t *testing.T) {
 		{"/user/profile", []string{"user", "profile"}},
 		{"/api/v1//data/", []string{"api", "v1", "data"}},
 		{"//debug/pprof/", []string{"debug", "pprof"}},
+		{"//////debug/////pprof/", []string{"/////debug", "////pprof"}},
 	}
 
 	for _, tc := range testCases {
@@ -130,10 +139,13 @@ func TestErrorHandling(t *testing.T) {
 		t.Error("不存在路由错误处理异常")
 	}
 
-	// 测试非法路径
+	// 测试路由第一个字符不是 /的情况，
 	root.insertRoute("invalid_path", "GET", func(c Context) {})
-	if n, _ := root.FindRoute("invalid_path"); n != nil {
+	if n, _ := root.FindRoute("invalid_path"); n == nil {
 		t.Error("非法路径处理异常")
+	}
+	if n, _ := root.FindRoute("invalid_path"); n.fullPath != "/invalid_path" {
+		t.Error("路径解释错误")
 	}
 }
 

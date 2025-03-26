@@ -35,7 +35,3 @@ func splitPath(path string) []string {
 	}
 	return ans
 }
-
-func checkPath(path string) bool {
-	return strings.HasPrefix(path, "/")
-}
